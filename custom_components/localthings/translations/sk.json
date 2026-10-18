@@ -159,6 +159,12 @@
       },
       "cooktop_paused": {
         "name": "Pozastavené"
+      },
+      "legacy_dryer_wrinkle_prevent": {
+        "name": "Ochrana proti pokrčeniu"
+      },
+      "legacy_dryer_damp_alert": {
+        "name": "Upozornenie na vlhké prádlo"
       }
     },
     "button": {
@@ -1632,6 +1638,15 @@
       },
       "burner_pan_size": {
         "name": "Veľkosť nádoby zóny {number}"
+      },
+      "legacy_dryer_dry_level": {
+        "name": "Úroveň sušenia"
+      },
+      "legacy_dryer_dry_time": {
+        "name": "Čas sušenia"
+      },
+      "legacy_dryer_cycle_code": {
+        "name": "Kód programu"
       }
     },
     "switch": {
