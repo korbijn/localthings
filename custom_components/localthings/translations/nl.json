@@ -1653,6 +1653,21 @@
       "burner_pan_size": {
         "name": "Pangrootte kookzone {number}"
       },
+      "cooktop_timer_remaining": {
+        "name": "Resterende timertijd"
+      },
+      "cooktop_timer_status": {
+        "name": "Timerstatus"
+      },
+      "cooktop_ring_size": {
+        "name": "Grootte kookzone {number}",
+        "state": {
+          "idle": "Inactief",
+          "single": "Enkel",
+          "dual": "Dubbel",
+          "triple": "Drievoudig"
+        }
+      },
       "legacy_dryer_dry_level": {
         "name": "Droogniveau"
       },

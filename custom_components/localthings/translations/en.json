@@ -1653,6 +1653,21 @@
       "burner_pan_size": {
         "name": "Burner {number} pan size"
       },
+      "cooktop_timer_remaining": {
+        "name": "Timer Remaining"
+      },
+      "cooktop_timer_status": {
+        "name": "Timer Status"
+      },
+      "cooktop_ring_size": {
+        "name": "Burner {number} Ring Size",
+        "state": {
+          "idle": "Idle",
+          "single": "Single",
+          "dual": "Dual",
+          "triple": "Triple"
+        }
+      },
       "legacy_dryer_dry_level": {
         "name": "Dry level"
       },

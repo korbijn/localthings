@@ -31,6 +31,10 @@ _OPTIONS_POWER = dataclasses.replace(
     cooktop.COOKTOP_POWER,
     match_fn=lambda rep, resources: not _burner_list_board(rep, resources),
 )
+_OPTIONS_MODE = dataclasses.replace(
+    cooktop.COOKTOP_MODE,
+    match_fn=lambda rep, resources: not cooktop.is_legacy_radiant_cooktop(rep, resources),
+)
 # POWER_VS_FALLBACK's own rule (the OCF-standard /power/0 wins) plus the
 # surface split.
 _BURNER_LIST_POWER = dataclasses.replace(
@@ -47,37 +51,53 @@ def _unique(caps):
     return [c for c in caps if not (id(c) in seen or seen.add(id(c)))]
 
 
+def _exclude_empty_hood(cap):
+    # The unpaired NZ36K7570R hood reports constant power and remote status.
+    # Excluding its entities lets the generic subdevice liveness check reject it.
+    return dataclasses.replace(
+        cap,
+        match_fn=lambda rep, resources: (
+            not cooktop.is_empty_legacy_hood_slot(resources)
+            and (cap.match_fn is None or cap.match_fn(rep, resources))
+        ),
+    )
+
+
 REGISTRY = DeviceRegistry(
     name="cooktop",
     capabilities=_build(
-        _unique(
-            [
-                *ignored.IGNORED,
-                *common.UNIVERSAL,
-                common.POWER_GENERIC,
-                _OPTIONS_POWER,
-                _BURNER_LIST_POWER,
-                # /mode/vs/0 options-array boards.
-                cooktop.COOKTOP_MODE,
-                cooktop.DIAGNOSIS,
-                cooktop.COOKTOP_CONNECTED,
-                # /cooktop/status/vs/0 burnerList boards.
-                range_caps.COOKTOP_STATUS,
-                range_caps.COOKTOP_SPEC,
-                range_caps.COOKTOP_SAFETY,
-                range_caps.PROBE_STATUS,
-                cooktop.PAIRED_HOOD_STATUS,
-                common.FIRMWARE_UPDATE,
-                common.ALARMS,
-                common.KIDS_LOCK_VS_FALLBACK,
-                # Empty ({}) on the only cooktop that reports it, a Dacor
-                # DTI36P876BB (issue #621), so there is no state to model.
-                Capability(href="/operational/state/vs/0"),
-                # registry.PROBE_HREFS is global, so every registry carries
-                # these (issue #301).
-                common.FILE_LIST,
-                common.FILE_TRANSFER,
-            ]
-        )
+        [
+            _exclude_empty_hood(cap)
+            for cap in _unique(
+                [
+                    *ignored.IGNORED,
+                    *common.UNIVERSAL,
+                    common.POWER_GENERIC,
+                    _OPTIONS_POWER,
+                    _BURNER_LIST_POWER,
+                    # /mode/vs/0 options-array boards.
+                    _OPTIONS_MODE,
+                    cooktop.LEGACY_RADIANT_MODE,
+                    cooktop.DIAGNOSIS,
+                    cooktop.COOKTOP_CONNECTED,
+                    # /cooktop/status/vs/0 burnerList boards.
+                    range_caps.COOKTOP_STATUS,
+                    range_caps.COOKTOP_SPEC,
+                    range_caps.COOKTOP_SAFETY,
+                    range_caps.PROBE_STATUS,
+                    cooktop.PAIRED_HOOD_STATUS,
+                    common.FIRMWARE_UPDATE,
+                    common.ALARMS,
+                    common.KIDS_LOCK_VS_FALLBACK,
+                    # Empty ({}) on the only cooktop that reports it, a Dacor
+                    # DTI36P876BB (issue #621), so there is no state to model.
+                    Capability(href="/operational/state/vs/0"),
+                    # registry.PROBE_HREFS is global, so every registry carries
+                    # these (issue #301).
+                    common.FILE_LIST,
+                    common.FILE_TRANSFER,
+                ]
+            )
+        ]
     ),
 )
