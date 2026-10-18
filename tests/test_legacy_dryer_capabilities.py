@@ -117,6 +117,56 @@ def test_smart_control_off_is_reported():
     assert _discover(bodies)[2]["remote_control"] is False
 
 
+@pytest.mark.parametrize(
+    ("wrapper", "field", "key"),
+    [
+        ("Operation", "power", "power_switch"),
+        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+    ],
+)
+@pytest.mark.parametrize(("value", "expected"), [("On", True), ("Off", False)])
+def test_reported_flags_keep_their_polarity(wrapper, field, key, value, expected):
+    bodies = _bodies()
+    bodies[wrapper][field] = value
+    assert _discover(bodies)[2][key] is expected
+
+
+@pytest.mark.parametrize(
+    ("wrapper", "field", "key"),
+    [
+        ("Operation", "power", "power_switch"),
+        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+    ],
+)
+@pytest.mark.parametrize("value", [None, "NotSupported", [], {}, 0])
+def test_unrecognized_flags_stay_unknown(wrapper, field, key, value):
+    bodies = _bodies()
+    bodies[wrapper][field] = value
+    assert _discover(bodies)[2].get(key) is None
+
+
+@pytest.mark.parametrize(
+    ("wrapper", "field", "key"),
+    [
+        ("Operation", "power", "power_switch"),
+        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+    ],
+)
+def test_missing_flags_stay_unknown(wrapper, field, key):
+    bodies = _bodies()
+    del bodies[wrapper][field]
+    assert _discover(bodies)[2].get(key) is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"), [("Enable", True), ("Disable", False), ("NotSupported", None)]
+)
+def test_damp_alert_distinguishes_off_from_unknown(value, expected):
+    bodies = _bodies()
+    bodies["Mode"]["options"] = ["Course_9A", f"MixedLoadBell_{value}"]
+    assert _discover(bodies)[2]["legacy_dryer_damp_alert"] is expected
+
+
 def test_energy_database_pointer_stays_a_visible_gap():
     assert unmapped_wrappers(_bodies(), TP6X_DRYER) == ["EnergyConsumption"]
 

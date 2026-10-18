@@ -7,6 +7,15 @@ from ..entities import BinarySensorDesc, SensorDesc
 from . import common, dryer, operational
 
 
+def _reported_flag(value: object, enabled: str, disabled: str) -> bool | None:
+    """Keep missing or unexpected readings unknown rather than reporting off."""
+    if value == enabled:
+        return True
+    if value == disabled:
+        return False
+    return None
+
+
 def read_only(capability: Capability) -> Capability:
     return replace(
         capability,
@@ -20,7 +29,7 @@ OPERATIONAL_STATE = read_only(operational.OPERATIONAL_STATE)
 POWER = replace(
     common.POWER_VS_FALLBACK,
     entities=tuple(
-        replace(desc, exists_fn=None)
+        replace(desc, exists_fn=None, value_fn=lambda value: _reported_flag(value, "On", "Off"))
         for desc in common.POWER_VS_FALLBACK.entities
         if isinstance(desc, BinarySensorDesc)
     ),
@@ -44,7 +53,7 @@ SETTINGS = replace(
             key="legacy_dryer_wrinkle_prevent",
             field="x.com.samsung.da.wrinklePrevent",
             icon="mdi:iron-outline",
-            value_fn=lambda value: value == "On",
+            value_fn=lambda value: _reported_flag(value, "On", "Off"),
         ),
     ),
 )
@@ -66,9 +75,10 @@ COURSE = Capability(
                 common.option_value(rep.get("x.com.samsung.da.options"), "MixedLoadBell")
                 is not None
             ),
-            rep_fn=lambda rep: (
-                common.option_value(rep.get("x.com.samsung.da.options"), "MixedLoadBell")
-                == "Enable"
+            rep_fn=lambda rep: _reported_flag(
+                common.option_value(rep.get("x.com.samsung.da.options"), "MixedLoadBell"),
+                "Enable",
+                "Disable",
             ),
         ),
     ),
