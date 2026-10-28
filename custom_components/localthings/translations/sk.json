@@ -160,10 +160,10 @@
       "cooktop_paused": {
         "name": "Pozastavené"
       },
-      "legacy_dryer_wrinkle_prevent": {
+      "wrinkle_prevent": {
         "name": "Ochrana proti pokrčeniu"
       },
-      "legacy_dryer_damp_alert": {
+      "damp_alert": {
         "name": "Upozornenie na vlhké prádlo"
       }
     },
@@ -1668,14 +1668,14 @@
           "triple": "Trojitá"
         }
       },
-      "legacy_dryer_dry_level": {
-        "name": "Úroveň sušenia"
-      },
-      "legacy_dryer_dry_time": {
-        "name": "Čas sušenia"
-      },
       "legacy_dryer_cycle_code": {
         "name": "Kód programu"
+      },
+      "dryer_dry_level": {
+        "name": "Úroveň sušenia"
+      },
+      "dry_time": {
+        "name": "Čas sušenia"
       }
     },
     "switch": {

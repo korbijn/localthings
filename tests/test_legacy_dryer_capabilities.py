@@ -1,4 +1,4 @@
-"""TP6X dryer reads from diagnostics and rejection of unmeasured writes."""
+"""TP6X dryer reads from diagnostics without exposing unverified controls."""
 
 import json
 from copy import deepcopy
@@ -7,25 +7,25 @@ from pathlib import Path
 import pytest
 
 from custom_components.localthings.legacy_http import (
-    PREFIX,
     TP6X_DRYER,
-    batch_steps,
+    TP6X_WASHER,
     is_mapped,
     table_for,
     to_resources,
-    to_write,
     unmapped_wrappers,
 )
 from custom_components.localthings.registry.adapter import flatten
-from custom_components.localthings.registry.by_type import resolve
+from custom_components.localthings.registry.by_type import for_device_by_model, resolve
+from custom_components.localthings.registry.by_type.legacy_dryer import REGISTRY
 from custom_components.localthings.registry.discovery import discover
 from custom_components.localthings.registry.entities import BinarySensorDesc, SensorDesc
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def _bodies(name="dryer_tp6x_8888"):
-    return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))["bodies"]
+def _bodies():
+    path = FIXTURES / "dryer_tp6x_dv80m8214aw_cooling_8888.json"
+    return json.loads(path.read_text(encoding="utf-8"))["bodies"]
 
 
 def _discover(bodies):
@@ -38,30 +38,11 @@ def _discover(bodies):
     return bound, resources, flatten(bound, resources)
 
 
-def test_idle_capture_gets_readable_entities():
-    assert is_mapped("TP6X_DRYER")
-    assert table_for("TP6X_DRYER") is TP6X_DRYER
-    bound, resources, state = _discover(_bodies())
-    assert state["machine_state"] == "idle"
-    assert state["cycle_active"] is False
-    assert state["completion_minutes"] == 169
-    assert state["progress_percentage"] == 0
-    assert state["finish_time"] is None
-    assert state["remote_control"] is True
-    assert state["power_switch"] is True
-    assert state["legacy_dryer_cycle_code"] == "9A"
-    assert state["legacy_dryer_dry_level"] == "2"
-    assert state["legacy_dryer_dry_time"] == "00:00:00"
-    assert state["legacy_dryer_wrinkle_prevent"] is False
-    assert state["legacy_dryer_damp_alert"] is False
-    assert all(isinstance(entity.desc, (SensorDesc, BinarySensorDesc)) for entity in bound)
-    assert not any("kwh" in key or "watts" in key for key in state)
-    assert "/washer/vs/0" in resources
-
-
 def test_real_cooling_capture_gets_readable_entities():
     """Issue #646 reports Cooling even though supportedProgress omits it."""
-    bodies = _bodies("dryer_tp6x_dv80m8214aw_cooling_8888")
+    assert is_mapped("TP6X_DRYER")
+    assert table_for("TP6X_DRYER") is TP6X_DRYER is TP6X_WASHER
+    bodies = _bodies()
     bound, _, state = _discover(bodies)
     assert state["machine_state"] == "active"
     assert state["cycle_active"] is True
@@ -71,16 +52,21 @@ def test_real_cooling_capture_gets_readable_entities():
     assert state["finish_time"] is not None
     assert state["remote_control"] is True
     assert state["legacy_dryer_cycle_code"] == "96"
-    assert state["legacy_dryer_dry_level"] == "None"
-    assert state["legacy_dryer_dry_time"] == "00:30:00"
+    assert state["dry_level"] == "None"
+    assert state["dry_time"] == "00:30:00"
     assert all(isinstance(entity.desc, (SensorDesc, BinarySensorDesc)) for entity in bound)
-    golden = json.loads((FIXTURES / "golden/dryer_tp6x_8888.json").read_text())
-    assert sorted(state) == golden["state_keys"]
+
+
+def test_canonical_fixture_matches_the_real_capture():
+    from tests.conftest import _load_device
+
+    assert to_resources(_bodies(), TP6X_DRYER) == _load_device("dryer_tp6x_8888")
 
 
 @pytest.mark.parametrize(
     ("machine", "phase", "active", "display_state", "display_phase"),
     [
+        ("Ready", "None", False, "idle", "idle"),
         ("Run", "Drying", True, "active", "drying"),
         ("Run", "Cooling", True, "active", "cooling"),
         ("Pause", "Drying", False, "pause", "idle"),
@@ -121,7 +107,7 @@ def test_smart_control_off_is_reported():
     ("wrapper", "field", "key"),
     [
         ("Operation", "power", "power_switch"),
-        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+        ("Washer", "wrinklePrevent", "wrinkle_prevent"),
     ],
 )
 @pytest.mark.parametrize(("value", "expected"), [("On", True), ("Off", False)])
@@ -135,7 +121,7 @@ def test_reported_flags_keep_their_polarity(wrapper, field, key, value, expected
     ("wrapper", "field", "key"),
     [
         ("Operation", "power", "power_switch"),
-        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+        ("Washer", "wrinklePrevent", "wrinkle_prevent"),
     ],
 )
 @pytest.mark.parametrize("value", [None, "NotSupported", [], {}, 0])
@@ -149,7 +135,7 @@ def test_unrecognized_flags_stay_unknown(wrapper, field, key, value):
     ("wrapper", "field", "key"),
     [
         ("Operation", "power", "power_switch"),
-        ("Washer", "wrinklePrevent", "legacy_dryer_wrinkle_prevent"),
+        ("Washer", "wrinklePrevent", "wrinkle_prevent"),
     ],
 )
 def test_missing_flags_stay_unknown(wrapper, field, key):
@@ -164,60 +150,51 @@ def test_missing_flags_stay_unknown(wrapper, field, key):
 def test_damp_alert_distinguishes_off_from_unknown(value, expected):
     bodies = _bodies()
     bodies["Mode"]["options"] = ["Course_9A", f"MixedLoadBell_{value}"]
-    assert _discover(bodies)[2]["legacy_dryer_damp_alert"] is expected
+    assert _discover(bodies)[2]["damp_alert"] is expected
 
 
 def test_energy_database_pointer_stays_a_visible_gap():
     assert unmapped_wrappers(_bodies(), TP6X_DRYER) == ["EnergyConsumption"]
 
 
-@pytest.mark.parametrize(
-    ("href", "patch"),
-    [
-        ("/operational/state/vs/0", {PREFIX + "state": "Run"}),
-        ("/power/vs/0", {PREFIX + "power": "Off"}),
-        ("/washer/vs/0", {PREFIX + "dryLevel": "3"}),
-        ("/course/vs/0", {PREFIX + "options": ["Course_9A"]}),
-        ("/remotectrl/vs/0", {PREFIX + "remoteControlEnabled": True}),
-    ],
-)
-def test_direct_and_batch_commands_cannot_be_translated(href, patch):
-    assert to_write([(href, patch)], TP6X_DRYER) == {"Device": {}}
-    assert batch_steps([{"href": href, "rep": patch}], TP6X_DRYER) is None
-
-
-def test_captured_entities_match_golden():
-    golden = json.loads((FIXTURES / "golden/dryer_tp6x_8888.json").read_text())
-    assert sorted(_discover(_bodies())[2]) == golden["state_keys"]
-
-
 def test_missing_optional_values_do_not_invent_damp_alert():
     bodies = _bodies()
     bodies["Mode"]["options"] = ["Course_9A"]
-    assert "legacy_dryer_damp_alert" not in _discover(bodies)[2]
+    assert "damp_alert" not in _discover(bodies)[2]
 
 
 @pytest.mark.parametrize(
-    "body",
+    ("model_num", "description", "legacy"),
     [
-        {PREFIX + "state": "Run"},
-        [{"href": "/operational/state/vs/0", "rep": {PREFIX + "state": "Run"}}],
+        ("TP6X_DV80M8214AW", "TP6X_DRYER", True),
+        ("", "tp6x_dryer", True),
+        ("DRYER", "", False),
+        ("TP6X_DRYER", "UNKNOWN", False),
+        ("TP6X_DRYER_DRUM", "TP6X_DRYER_DRUM", False),
+        ("TP6X_DRYER_TOPLOAD", "TP6X_DRYER_TOPLOAD", False),
+        ("", "TP6X_DRYER_EXTRA", False),
+        ("", "TP6X_DRYER_DV80M8214AW", False),
     ],
 )
-def test_transport_rejects_writes_without_contacting_the_appliance(monkeypatch, body):
-    from custom_components.localthings.legacy_http_transport import LegacyHttpTransport
+def test_only_the_exact_description_routes_to_the_read_only_registry(
+    model_num, description, legacy
+):
+    assert (for_device_by_model(model_num, description) is REGISTRY) is legacy
 
-    transport = LegacyHttpTransport(
-        "192.0.2.1",
-        8888,
-        cert_pem="unused",
-        key_pem="unused",
-        token="unused",
-        family="TP6X_DRYER",
+
+@pytest.mark.parametrize("description", ["TP6X_DRYER_DRUM", "TP6X_DRYER_TOPLOAD"])
+def test_flexdry_description_rows_are_not_shadowed(monkeypatch, description):
+    from custom_components.localthings.registry.by_type import _CONSUMER_DESCRIPTION_TO_KEY
+    from custom_components.localthings.registry.by_type.dryer import REGISTRY as DRYER_REGISTRY
+
+    monkeypatch.setitem(_CONSUMER_DESCRIPTION_TO_KEY, description, "dryer")
+    assert for_device_by_model(description, description) is DRYER_REGISTRY
+
+
+def test_registry_exposes_no_write_functions():
+    assert all(
+        isinstance(desc, (SensorDesc, BinarySensorDesc)) and getattr(desc, "write_fn", None) is None
+        for capabilities in REGISTRY.capabilities.values()
+        for capability in capabilities
+        for desc in capability.entities
     )
-    requests = []
-    monkeypatch.setattr(transport, "_request", lambda *args, **kwargs: requests.append(args))
-    path = ["device", "0"] if isinstance(body, list) else ["operational", "state", "vs", "0"]
-    code, _ = transport.write(path, body, timeout=1)
-    assert code == 0x84
-    assert requests == []

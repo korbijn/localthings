@@ -6,14 +6,6 @@ import pytest
 GOLDEN = Path(__file__).parent / "fixtures" / "golden"
 
 
-def test_registry_reproduces_golden_state_keys_for_legacy_dryer():
-    from tests.conftest import _load_device
-
-    resources = _load_device("dryer_tp6x_8888")
-    golden = json.loads((GOLDEN / "dryer_tp6x_8888.json").read_text())
-    assert _new_state_keys("dryer_tp6x_8888", resources) == golden["state_keys"]
-
-
 def _new_state_keys(name, resources, device_types=()):
     from custom_components.localthings.registry.adapter import flatten
     from custom_components.localthings.registry.by_type import resolve
@@ -118,6 +110,20 @@ def test_registry_reproduces_golden_state_keys_for_dryer():
     resources = _load_device("dryer")
     golden = json.loads((GOLDEN / "dryer.json").read_text())
     state_keys = _new_state_keys("dryer", resources)
+    assert set(state_keys) == set(golden["state_keys"]), (
+        f"state_keys mismatch:\n"
+        f"  extra:   {sorted(set(state_keys) - set(golden['state_keys']))}\n"
+        f"  missing: {sorted(set(golden['state_keys']) - set(state_keys))}"
+    )
+
+
+def test_registry_reproduces_golden_state_keys_for_dryer_tp6x_8888():
+    """Issue #646's real cooling capture through the read-only legacy registry."""
+    from tests.conftest import _load_device
+
+    name = "dryer_tp6x_8888"
+    golden = json.loads((GOLDEN / f"{name}.json").read_text())
+    state_keys = _new_state_keys(name, _load_device(name))
     assert set(state_keys) == set(golden["state_keys"]), (
         f"state_keys mismatch:\n"
         f"  extra:   {sorted(set(state_keys) - set(golden['state_keys']))}\n"

@@ -40,17 +40,18 @@ SETTINGS = replace(
     entities=(
         *read_only(dryer.DRYER_SETTINGS).entities,
         SensorDesc(
-            key="legacy_dryer_dry_level",
+            key="dry_level",
+            translation_key="dryer_dry_level",
             field="x.com.samsung.da.dryLevel",
             icon="mdi:water-percent",
         ),
         SensorDesc(
-            key="legacy_dryer_dry_time",
+            key="dry_time",
             field="x.com.samsung.da.dryTime",
             icon="mdi:timer",
         ),
         BinarySensorDesc(
-            key="legacy_dryer_wrinkle_prevent",
+            key="wrinkle_prevent",
             field="x.com.samsung.da.wrinklePrevent",
             icon="mdi:iron-outline",
             value_fn=lambda value: _reported_flag(value, "On", "Off"),
@@ -69,7 +70,7 @@ COURSE = Capability(
             rep_fn=lambda rep: common.option_value(rep.get("x.com.samsung.da.options"), "Course"),
         ),
         BinarySensorDesc(
-            key="legacy_dryer_damp_alert",
+            key="damp_alert",
             icon="mdi:bell-ring-outline",
             exists_fn=lambda rep, resources: (
                 common.option_value(rep.get("x.com.samsung.da.options"), "MixedLoadBell")

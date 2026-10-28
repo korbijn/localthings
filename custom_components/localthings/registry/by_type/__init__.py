@@ -78,6 +78,12 @@ _CONSUMER_PREFIX_TO_KEY: dict[str, str] = {
     "DW": "dishwasher",
 }
 
+# Exact legacy descriptions without a consumer-model suffix. FlexDry's
+# TP6X_DRYER_DRUM and TP6X_DRYER_TOPLOAD are separate families (#673).
+_CONSUMER_DESCRIPTION_TO_KEY: dict[str, str] = {
+    "TP6X_DRYER": "legacy_dryer",
+}
+
 # Board-family token -> registry key, matched against whole tokens of
 # `modelNum`/`description` (see `_board_tokens`).
 #
@@ -94,7 +100,6 @@ _CONSUMER_PREFIX_TO_KEY: dict[str, str] = {
 # air-conditioner spellings below), which is a statement about the
 # hardware, not a shortcut.
 _BOARD_TOKEN_TO_KEY: dict[str, str] = {
-    "DRYER": "legacy_dryer",  # TP6X_DRYER description on the HTTPS/8888 bridge.
     "REF": "refrigerator",
     # Air conditioners: distinct board families sharing one resource
     # surface -- room, package, Korean (#136), window (#87), 2-in-1
@@ -194,7 +199,10 @@ def _consumer_model_key(description: str) -> str | None:
     for_device_by_model() consults the board-family table first and this
     only as a fallback, so that ambiguity resolves correctly.
     """
-    segments = (description or "").split("/", 1)[0].split("_")
+    head = (description or "").split("/", 1)[0]
+    if key := _CONSUMER_DESCRIPTION_TO_KEY.get(head.upper()):
+        return key
+    segments = head.split("_")
     for segment in reversed(segments):
         key = _CONSUMER_PREFIX_TO_KEY.get(segment[:2].upper())
         if key is not None:

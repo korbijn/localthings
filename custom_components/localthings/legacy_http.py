@@ -107,23 +107,9 @@ TP6X_WASHER: tuple[Resource, ...] = (
 )
 
 
-# TP6X_DV80M8214AW reports the laundry vocabulary inside a Washer wrapper.
-# Only reads are captured; to_write refuses this table until writes are measured.
-TP6X_DRYER: tuple[Resource, ...] = (
-    Resource(
-        endpoint="operation",
-        wrapper="Operation",
-        href="/operational/state/vs/0",
-        fan_out={"power": "/power/vs/0", "kidsLock": "/kidslock/vs/0"},
-        numeric=frozenset({"progressPercentage"}),
-    ),
-    Resource(endpoint="mode", wrapper="Mode", href="/course/vs/0"),
-    Resource(endpoint="washer", wrapper="Washer", href="/washer/vs/0"),
-    Resource(endpoint="configuration", wrapper="Configuration", href="/remotectrl/vs/0"),
-    INFORMATION,
-    Resource(endpoint="diagnosis", wrapper="Diagnosis", href="/diagnosis/vs/0"),
-    Resource(endpoint="alarms", wrapper="Alarms", href="/alarms/vs/0", as_items=True),
-)
+# TP6X_DV80M8214AW uses the washer's legacy wrappers (#646), as do the
+# FlexDry sections in #673. Unverified controls are excluded by the registry.
+TP6X_DRYER: tuple[Resource, ...] = TP6X_WASHER
 
 
 # TP6X_RAC_16K (issue #563), read from a diagnostics dump. The fields are the
@@ -487,8 +473,6 @@ def to_write(
     Always the aggregate endpoint: a bare body on a resource endpoint
     (`PUT /devices/0/mode`) has never been tested on this hardware.
     """
-    if table is TP6X_DRYER:
-        return {"Device": {}}
     device: dict[str, Any] = {}
     items = {resource.href: resource for resource in table if resource.as_items}
     for href, patch in steps:

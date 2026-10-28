@@ -4,18 +4,18 @@
     "child_lock",
     "completion_minutes",
     "cycle_active",
+    "damp_alert",
     "diagnosis",
+    "dry_level",
+    "dry_time",
     "dryer_type",
     "finish_time",
     "legacy_dryer_cycle_code",
-    "legacy_dryer_damp_alert",
-    "legacy_dryer_dry_level",
-    "legacy_dryer_dry_time",
-    "legacy_dryer_wrinkle_prevent",
     "machine_state",
     "power_switch",
     "progress",
     "progress_percentage",
-    "remote_control"
+    "remote_control",
+    "wrinkle_prevent"
   ]
 }

@@ -160,10 +160,10 @@
       "cooktop_paused": {
         "name": "Pausiert"
       },
-      "legacy_dryer_wrinkle_prevent": {
+      "wrinkle_prevent": {
         "name": "Knitterschutz"
       },
-      "legacy_dryer_damp_alert": {
+      "damp_alert": {
         "name": "Signal Mischbeladung"
       }
     },
@@ -1668,14 +1668,14 @@
           "triple": "Dreifach"
         }
       },
-      "legacy_dryer_dry_level": {
-        "name": "Trockenstufe"
-      },
-      "legacy_dryer_dry_time": {
-        "name": "Trockenzeit"
-      },
       "legacy_dryer_cycle_code": {
         "name": "Programmcode"
+      },
+      "dryer_dry_level": {
+        "name": "Trockenstufe"
+      },
+      "dry_time": {
+        "name": "Trockenzeit"
       }
     },
     "switch": {

@@ -529,10 +529,10 @@
       "cooktop_paused": {
         "name": "En pausa"
       },
-      "legacy_dryer_wrinkle_prevent": {
+      "wrinkle_prevent": {
         "name": "Anti-arrugas"
       },
-      "legacy_dryer_damp_alert": {
+      "damp_alert": {
         "name": "Alerta de humedad"
       }
     },
@@ -2037,14 +2037,14 @@
           "triple": "Triple"
         }
       },
-      "legacy_dryer_dry_level": {
-        "name": "Nivel de secado"
-      },
-      "legacy_dryer_dry_time": {
-        "name": "Tiempo de secado"
-      },
       "legacy_dryer_cycle_code": {
         "name": "Código de programa"
+      },
+      "dryer_dry_level": {
+        "name": "Nivel de secado"
+      },
+      "dry_time": {
+        "name": "Tiempo de secado"
       }
     },
     "switch": {
