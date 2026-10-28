@@ -151,6 +151,9 @@
       "divider": {
         "name": "Priečka"
       },
+      "reservoir_open": {
+        "name": "Nádržka"
+      },
       "wrinkle_prevent_active": {
         "name": "Ochrana proti pokrčeniu aktívna"
       },
@@ -159,6 +162,9 @@
       },
       "cooktop_paused": {
         "name": "Pozastavené"
+      },
+      "booster_heater": {
+        "name": "Pomocné vykurovacie teleso"
       },
       "wrinkle_prevent": {
         "name": "Ochrana proti pokrčeniu"
@@ -257,6 +263,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
+              "auto": "Automatický",
               "smart": "Inteligentný",
               "max": "Max",
               "mid": "Stredný",
@@ -270,6 +277,9 @@
     "light": {
       "lamp": {
         "name": "Svetlo"
+      },
+      "paired_hood_light": {
+        "name": "Svetlo spárovaného digestora"
       }
     },
     "number": {
@@ -290,6 +300,9 @@
       },
       "oven_setpoint": {
         "name": "Požadovaná teplota"
+      },
+      "paired_hood_shutoff_timer": {
+        "name": "Časovač vypnutia spárovaného digestora"
       },
       "sensing_interval": {
         "name": "Interval AI Purify"
@@ -858,6 +871,19 @@
           "75": "Jemná bielizeň",
           "77": "Nekrčivá bielizeň",
           "78": "Rýchle pranie",
+          "91": "Samočistenie",
+          "94": "Uteráky",
+          "9c": "Intenzívny",
+          "9d": "Plákanie + odstreďovanie",
+          "9e": "Nekrčivá bielizeň",
+          "9f": "Rýchle pranie",
+          "a2": "Jemná bielizeň",
+          "a3": "Športové oblečenie",
+          "a5": "Posteľná bielizeň",
+          "a9": "Dezinfekcia",
+          "aa": "Biela bielizeň",
+          "ab": "Eko pranie v studenej vode",
+          "b1": "Samočistenie+",
           "ba": "Vypustenie/odstreďovanie",
           "d0": "Bavlna",
           "d1": "Eko bavlna",
@@ -1448,6 +1474,16 @@
       "power_level": {
         "name": "Úroveň výkonu"
       },
+      "paired_hood_fan_setting": {
+        "name": "Nastavenie ventilátora spárovaného digestora",
+        "state": {
+          "off": "Vypnuté",
+          "low": "Nízka",
+          "medium": "Stredná",
+          "high": "Vysoká",
+          "boost": "Zvýšený výkon"
+        }
+      },
       "paired_hood_fan_speed": {
         "name": "Rýchlosť ventilátora spárovaného digestora"
       },
@@ -1456,6 +1492,12 @@
       },
       "paired_hood_model": {
         "name": "Model spárovaného digestora"
+      },
+      "paired_hood_shutoff_timer_set": {
+        "name": "Nastavený časovač vypnutia spárovaného digestora"
+      },
+      "paired_hood_shutoff_timer_state": {
+        "name": "Stav časovača vypnutia spárovaného digestora"
       },
       "power_energy_kwh": {
         "name": "Elektrická energia"
@@ -1667,6 +1709,12 @@
           "dual": "Dvojitá",
           "triple": "Trojitá"
         }
+      },
+      "heat_generated_kwh": {
+        "name": "Vyrobené teplo"
+      },
+      "three_way_valve": {
+        "name": "Trojcestný ventil"
       },
       "legacy_dryer_cycle_code": {
         "name": "Kód programu"
@@ -2130,6 +2178,7 @@
         "title": "Možnosti LocalThings",
         "menu_options": {
           "settings": "Nastavenia zariadenia",
+          "subdevices": "Podriadené zariadenia",
           "cloud_courses": "Stiahnuté cykly",
           "forget_learned_modes": "Zabudnúť zapamätané režimy",
           "debug_write": "Ladenie: zápis do prostriedku"
@@ -2143,6 +2192,13 @@
           "finish_time_hysteresis_minutes": "Odhadovaný koniec – minimálna zmena (minúty)",
           "learn_device_modes": "Pamätať si režimy, ktoré zariadenie hlási, ale neuvádza ako podporované",
           "cloud_courses_enabled": "Ponúkať stiahnuté cykly"
+        }
+      },
+      "subdevices": {
+        "title": "Podriadené zariadenia",
+        "description": "Niektoré spotrebiče sprístupňujú viac ako jedno zariadenie: každú vnútornú jednotku multi-split systému alebo každý priestor dvojitej rúry. Iné hlásia ďalší slot, ktorému nezodpovedá žiadny skutočný hardvér, a ten sa zobrazí ako duplicitné alebo prázdne zariadenie. Zrušte začiarknutie pri každom podriadenom zariadení, ktoré nezodpovedá ničomu na vašom spotrebiči. Jeho zariadenie sa odstráni a integrácia sa znova načíta bez neho; opätovným začiarknutím ho vrátite.",
+        "data": {
+          "enabled_subdevices": "Ponechať tieto podriadené zariadenia"
         }
       },
       "forget_learned_modes": {
@@ -2340,6 +2396,9 @@
     },
     "extra_rinse_unavailable_for_cycle": {
       "message": "Extra plákanie nie je pri vybranom cykle dostupné."
+    },
+    "paired_hood_fan_off": {
+      "message": "Pred nastavením časovača vypnutia zapnite ventilátor digestora."
     }
   },
   "selector": {

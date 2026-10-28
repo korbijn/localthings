@@ -7,9 +7,6 @@ from pathlib import Path
 import pytest
 
 from custom_components.localthings.legacy_http import (
-    TP6X_DRYER,
-    TP6X_WASHER,
-    is_mapped,
     table_for,
     to_resources,
     unmapped_wrappers,
@@ -29,7 +26,7 @@ def _bodies():
 
 
 def _discover(bodies):
-    resources = to_resources(bodies, table_for("TP6X_DRYER"))
+    resources = to_resources(bodies, table_for("Dryer"))
     registry = resolve(resources)
     assert registry is not None and registry.name == "dryer"
     unbound = []
@@ -40,8 +37,6 @@ def _discover(bodies):
 
 def test_real_cooling_capture_gets_readable_entities():
     """Issue #646 reports Cooling even though supportedProgress omits it."""
-    assert is_mapped("TP6X_DRYER")
-    assert table_for("TP6X_DRYER") is TP6X_DRYER is TP6X_WASHER
     bodies = _bodies()
     bound, _, state = _discover(bodies)
     assert state["machine_state"] == "active"
@@ -60,7 +55,32 @@ def test_real_cooling_capture_gets_readable_entities():
 def test_canonical_fixture_matches_the_real_capture():
     from tests.conftest import _load_device
 
-    assert to_resources(_bodies(), TP6X_DRYER) == _load_device("dryer_tp6x_8888")
+    assert to_resources(_bodies(), table_for("Dryer")) == _load_device("dryer_tp6x_8888")
+
+
+@pytest.mark.parametrize("device_type", ["Washer", "Dryer"])
+def test_transport_reads_the_capture_using_the_records_laundry_type(monkeypatch, device_type):
+    from custom_components.localthings.legacy_http_transport import LegacyHttpTransport
+    from custom_components.localthings.registry.batch import parse_device0_batch
+    from tests.conftest import _load_device
+
+    monkeypatch.setattr("custom_components.localthings.legacy_http_transport._STATE", {})
+    transport = LegacyHttpTransport(
+        "192.0.2.1", 8888, cert_pem="unused", key_pem="unused", token="unused", family="TP6X_DRYER"
+    )
+    requests = []
+
+    def request(method, path, **kwargs):
+        requests.append((method, path))
+        if path == "/devices/0":
+            return 200, {"Device": {"type": device_type, **_bodies()}}
+        return 404, None
+
+    monkeypatch.setattr(transport, "_request", request)
+    code, batch = transport.read(["device", "0"], timeout=1)
+    assert code == 0x45
+    assert parse_device0_batch(batch) == _load_device("dryer_tp6x_8888")
+    assert all(method == "GET" for method, _ in requests)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +106,7 @@ def test_cycle_transitions(machine, phase, active, display_state, display_phase)
         assert state["completion_minutes"] == 0
         assert state["finish_time"] is None
         percentage = next(entity for entity in bound if entity.desc.key == "progress_percentage")
-        rep = to_resources(bodies, TP6X_DRYER)[percentage.href]
+        rep = to_resources(bodies, table_for("Dryer"))[percentage.href]
         assert isinstance(percentage.desc, SensorDesc)
         assert percentage.desc.sticky_fn is not None
         assert percentage.desc.sticky_value_fn is not None
@@ -154,7 +174,7 @@ def test_damp_alert_distinguishes_off_from_unknown(value, expected):
 
 
 def test_energy_database_pointer_stays_a_visible_gap():
-    assert unmapped_wrappers(_bodies(), TP6X_DRYER) == ["EnergyConsumption"]
+    assert unmapped_wrappers(_bodies(), table_for("Dryer")) == ["EnergyConsumption"]
 
 
 def test_missing_optional_values_do_not_invent_damp_alert():

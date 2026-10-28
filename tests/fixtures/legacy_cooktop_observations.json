@@ -1,4 +1,5 @@
 {
+  "seeds_note": "/mode/vs/0 options arrays extracted verbatim from six NZ36K7570R diagnostics downloads (PR #642), one per scenario key; nothing else from those downloads is kept. See docs/investigations/legacy-cooktop.md.",
   "timer_10_minutes": [
     "DeviceType_NV9300K-/AA2",
     "SyncFlex_Off",

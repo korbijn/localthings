@@ -14,9 +14,11 @@ from tests.test_subdevice_discovery import _coordinator, _discover_with
 
 
 def _hood_resources():
-    return json.loads(
+    resources = json.loads(
         (Path(__file__).parent / "fixtures/legacy_cooktop_empty_hood.json").read_text()
     )
+    resources.pop("seeds_note")
+    return resources
 
 
 async def _discover_cooktop(coordinator, hood):

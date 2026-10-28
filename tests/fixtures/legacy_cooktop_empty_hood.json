@@ -1,4 +1,5 @@
 {
+  "seeds_note": "Captured from the NZ36K7570R reporter's diagnostics (PR #642): the canonical resources of the unpaired /device/1 hood slot, verbatim except that connection and account identifiers are left out. No hood was paired.",
   "/power/vs/0": {
     "x.com.samsung.da.power": "Off"
   },
